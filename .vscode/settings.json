@@ -1,0 +1,21 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false
+                }
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "dpg-d71nlqggjchc739ltvfg-a.oregon-postgres.render.com",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Render DB",
+            "group": "Production",
+            "database": "product_database_pjdx",
+            "username": "shohnazar",
+            "password": "8oEvkrldSL0J1wBs2njDZXoBWu0oO2yG"
+        }
+    ]
+}
