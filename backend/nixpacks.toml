@@ -4,7 +4,7 @@ providers = ["node"]
 cmds = [ "npm install --ignore-scripts" ]
 
 [ phases.build ]
-cmds = [ "npm rebuild better-sqlite3", "node db/migrate.js" ]
+cmds = [ "npm rebuild better-sqlite3 --build-from-source", "node db/migrate.js" ]
 
 [ phases.start ]
 cmds = [ "node server.js" ]
