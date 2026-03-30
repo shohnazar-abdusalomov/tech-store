@@ -33,6 +33,11 @@ async function initDB() {
             );
         `);
 
+        // Add category column if missing (migration for existing DB)
+        await client.query(`
+            ALTER TABLE products ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'phones';
+        `);
+
         // Seed products if empty
         const { rows } = await client.query('SELECT COUNT(*) FROM products');
         if (parseInt(rows[0].count) === 0) {
