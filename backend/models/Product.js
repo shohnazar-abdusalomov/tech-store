@@ -75,7 +75,7 @@ function getRelevantImages(title) {
 class Product {
     static findAll() {
         const products = db.prepare(`
-            SELECT id, title, price, description, rating, created_at
+            SELECT id, title, price, description, rating, category, created_at
             FROM products ORDER BY created_at DESC
         `).all();
         
@@ -89,7 +89,7 @@ class Product {
 
     static findById(id) {
         const product = db.prepare(`
-            SELECT id, title, price, description, rating, created_at
+            SELECT id, title, price, description, rating, category, created_at
             FROM products WHERE id = ?
         `).get(id);
         
@@ -100,11 +100,11 @@ class Product {
         return { ...product, images };
     }
 
-    static create({ title, price, description, rating, images }) {
+    static create({ title, price, description, rating, category, images }) {
         const result = db.prepare(`
-            INSERT INTO products (title, price, description, rating)
-            VALUES (?, ?, ?, ?)
-        `).run(title, price, description, rating || 0);
+            INSERT INTO products (title, price, description, rating, category)
+            VALUES (?, ?, ?, ?, ?)
+        `).run(title, price, description, rating || 0, category || 'phones');
         
         const newProductId = result.lastInsertRowid;
         
@@ -114,8 +114,10 @@ class Product {
         
         if (productImages && productImages.length > 0) {
             const insertImage = db.prepare('INSERT INTO images (product_id, url) VALUES (?, ?)');
-            for (const url of productImages) {
-                insertImage.run(newProductId, url);
+            for (const img of productImages) {
+                // img can be a string URL or { url: '...' } object
+                const url = typeof img === 'string' ? img : img.url;
+                if (url) insertImage.run(newProductId, url);
             }
         }
         

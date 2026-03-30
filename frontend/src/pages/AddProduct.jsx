@@ -1,18 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  FaPlus, 
-  FaImage, 
-  FaStar, 
-  FaDollarSign,
-  FaAlignLeft,
-  FaCheck,
-  FaTimes,
-  FaSync,
-  FaExclamationCircle
-} from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
+import { FaArrowLeft, FaBox, FaStar, FaPlus, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
-// API URL - use environment variable or fallback to localhost for development
 const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:3001';
 
 function AddProduct() {
@@ -21,305 +10,243 @@ function AddProduct() {
     title: '',
     price: '',
     description: '',
-    rating: '',
+    rating: '4.5',
+    category: 'phones'
   });
-  const [images, setImages] = useState(['']);
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleImageChange = (index, value) => {
-    const newImages = [...images];
-    newImages[index] = value;
-    setImages(newImages);
+  const handleImageAdd = (e) => {
+    const files = Array.from(e.target.files);
+    
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + Math.random(),
+            url: reader.result,
+            file: file
+          }
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
-  const addImageField = () => {
-    setImages([...images, '']);
-  };
-
-  const removeImageField = (index) => {
-    if (images.length > 1) {
-      setImages(images.filter((_, i) => i !== index));
-    }
-  };
-
-  const showToast = (message, type) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  const handleImageRemove = (id) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validation
-    if (!formData.title.trim()) {
-      showToast('Product title is required!', 'error');
-      return;
-    }
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      showToast('Please enter a valid price!', 'error');
-      return;
-    }
+    setLoading(true);
+    setError(null);
 
     try {
-      setLoading(true);
-      setError(null);
-
-      const payload = {
-        title: formData.title.trim(),
+      const productData = {
+        title: formData.title,
         price: parseFloat(formData.price),
-        description: formData.description.trim(),
-        rating: formData.rating ? parseFloat(formData.rating) : 0,
-        images: images.filter(img => img.trim() !== '')
+        description: formData.description,
+        rating: parseFloat(formData.rating),
+        category: formData.category,
+        images: images.map((img) => ({ url: img.url }))
       };
 
       const response = await fetch(`${API_URL}/api/products`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create product');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || errData.message || `Server error: ${response.status}`);
       }
 
-      const result = await response.json();
-      const newProduct = result.data || result;
-      showToast('Product created successfully!', 'success');
-      
-      setTimeout(() => navigate(`/product/${newProduct.id}`), 1500);
+      setSuccess(true);
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
     } catch (err) {
       setError(err.message);
-      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReset = () => {
-    setFormData({
-      title: '',
-      price: '',
-      description: '',
-      rating: '',
-    });
-    setImages(['']);
-    setError(null);
-  };
+  if (success) {
+    return (
+      <div className="add-product-page">
+        <div className="success-message">
+          <div className="success-icon-large">
+            <FaCheck />
+          </div>
+          <h2>Product Created Successfully!</h2>
+          <p>Redirecting to home page...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="page-header">
-        <h1 className="page-title">
-          <span className="page-title-icon">
-            <FaPlus />
-          </span>
-          Add New Product
-        </h1>
-        <p className="page-subtitle">Fill in the details to add a new product to your store</p>
-      </div>
+    <div className="add-product-page">
+      <div className="add-product-container">
+        <div className="page-header">
+          <Link to="/" className="back-link">
+            <FaArrowLeft /> Back to Store
+          </Link>
+          <h1>Add New Product</h1>
+          <p className="page-subtitle">Create a new product listing for your store</p>
+        </div>
 
-      <div className="form-container">
-        <form onSubmit={handleSubmit}>
-          {/* Title */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="title">
-              <span className="form-label-icon">
-                <FaPlus />
-              </span>
-              Product Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="form-input"
-              placeholder="e.g., iPhone 15 Pro Max"
-              value={formData.title}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        <form className="add-product-form" onSubmit={handleSubmit}>
+          <div className="form-section">
+            <h2>Product Information</h2>
+            
+            <div className="form-group">
+              <label htmlFor="title">Product Title *</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                placeholder="Enter product title"
+                required
+              />
+            </div>
 
-          {/* Price */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="price">
-              <span className="form-label-icon">
-                <FaDollarSign />
-              </span>
-              Price (USD) *
-            </label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              className="form-input"
-              placeholder="e.g., 999.99"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={handleChange}
-              required
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="category">Category</label>
+              <select id="category" name="category" value={formData.category} onChange={handleChange}>
+                <option value="phones">Phones</option>
+                <option value="laptops">Laptops</option>
+                <option value="audio">Audio</option>
+                <option value="gaming">Gaming</option>
+                <option value="wearables">Wearables</option>
+              </select>
+            </div>
 
-          {/* Description */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="description">
-              <span className="form-label-icon">
-                <FaAlignLeft />
-              </span>
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              className="form-textarea"
-              placeholder="Describe your product..."
-              value={formData.description}
-              onChange={handleChange}
-              rows={4}
-            />
-          </div>
-
-          {/* Rating */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="rating">
-              <span className="form-label-icon">
-                <FaStar />
-              </span>
-              Rating (0-5)
-            </label>
-            <input
-              type="number"
-              id="rating"
-              name="rating"
-              className="form-input"
-              placeholder="e.g., 4.5"
-              step="0.1"
-              min="0"
-              max="5"
-              value={formData.rating}
-              onChange={handleChange}
-            />
-            <p className="form-help">Rating should be between 0 and 5</p>
-          </div>
-
-          {/* Images */}
-          <div className="form-group">
-            <label className="form-label">
-              <span className="form-label-icon">
-                <FaImage />
-              </span>
-              Product Images (Optional)
-            </label>
-            <p className="form-help" style={{ color: 'var(--success)', marginBottom: '1rem' }}>
-              ✨ If left empty, relevant images will be automatically generated based on the product title!
-            </p>
-            {images.map((image, index) => (
-              <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="price">Price ($) *</label>
                 <input
-                  type="url"
-                  className="form-input"
-                  placeholder="https://example.com/image.jpg (optional)"
-                  value={image}
-                  onChange={(e) => handleImageChange(index, e.target.value)}
-                  style={{ flex: 1 }}
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  required
                 />
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    className="btn btn-danger btn-sm"
-                    onClick={() => removeImageField(index)}
-                    style={{ padding: '0.75rem' }}
-                  >
-                    <FaTimes />
-                  </button>
-                )}
               </div>
-            ))}
-            <button
-              type="button"
-              className="btn btn-outline btn-sm"
-              onClick={addImageField}
-              style={{ marginTop: '0.5rem' }}
-            >
-              <FaPlus />
-              Add Custom Image URL
-            </button>
-            <p className="form-help">Add custom image URLs if you want specific images</p>
+
+              <div className="form-group">
+                <label htmlFor="rating">Rating</label>
+                <div className="rating-input">
+                  <input
+                    type="number"
+                    id="rating"
+                    name="rating"
+                    value={formData.rating}
+                    onChange={handleChange}
+                    step="0.1"
+                    min="0"
+                    max="5"
+                  />
+                  <div className="stars-preview">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar key={i} className={i < Math.floor(formData.rating) ? 'filled' : ''} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="description">Description *</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Describe your product..."
+                rows="6"
+                required
+              />
+            </div>
           </div>
 
-          {/* Error Message */}
+          <div className="form-section">
+            <h2>Product Images</h2>
+            
+            <div className="image-upload-area">
+              <div className="image-preview-grid">
+                {images.map((img) => (
+                  <div key={img.id} className="image-preview">
+                    <img src={img.url} alt="Product preview" />
+                    <button
+                      type="button"
+                      className="remove-image-btn"
+                      onClick={() => handleImageRemove(img.id)}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+                
+                <label className="add-image-btn">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageAdd}
+                    hidden
+                  />
+                  <FaPlus />
+                  <span>Add Images</span>
+                </label>
+              </div>
+              <p className="upload-hint">Upload product images (PNG, JPG, GIF up to 5MB each)</p>
+            </div>
+          </div>
+
           {error && (
-            <div style={{
-              padding: '1rem',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid var(--danger)',
-              borderRadius: 'var(--radius)',
-              color: 'var(--danger)',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <FaExclamationCircle />
-              {error}
+            <div className="error-message-form">
+              <FaTimes /> {error}
             </div>
           )}
 
-          {/* Submit Buttons */}
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <button
-              type="submit"
-              className="btn btn-primary btn-lg"
-              disabled={loading}
-              style={{ flex: 1 }}
-            >
+          <div className="form-actions">
+            <Link to="/" className="btn-cancel">
+              Cancel
+            </Link>
+            <button type="submit" className="btn-submit" disabled={loading}>
               {loading ? (
                 <>
-                  <span className="loading-spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }}></span>
+                  <span className="loading-spinner" />
                   Creating...
                 </>
               ) : (
                 <>
-                  <FaCheck />
-                  Create Product
+                  <FaPlus /> Create Product
                 </>
               )}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary btn-lg"
-              onClick={handleReset}
-              disabled={loading}
-            >
-              <FaSync />
-              Reset
             </button>
           </div>
         </form>
       </div>
-
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`toast toast-${toast.type}`}>
-          {toast.type === 'success' ? <FaCheck /> : <FaTimes />}
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 }

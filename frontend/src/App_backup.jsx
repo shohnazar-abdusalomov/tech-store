@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
-import { FaShoppingBag, FaPlus, FaSun, FaMoon, FaStore, FaShoppingCart, FaBars, FaTimes, FaBox, FaHeart, FaTwitter, FaLinkedinIn, FaGithub } from 'react-icons/fa';
+import { FaShoppingBag, FaPlus, FaSun, FaMoon, FaStore, FaShoppingCart, FaBars, FaTimes, FaBox, FaHeart } from 'react-icons/fa';
 import { CartContext } from './context/CartContext';
 import Home from './pages/Home';
 import ProductDetail from './pages/ProductDetail';
@@ -66,6 +66,7 @@ function NavBar({ scrolled, theme, setTheme, menuOpen, setMenuOpen, setCartOpen,
 
   useEffect(() => {
     if (location.pathname !== '/') return;
+    setScrollSection('home');
     const handleScroll = () => {
       const sections = ['deals', 'products', 'categories'];
       for (const id of sections) {
@@ -80,7 +81,6 @@ function NavBar({ scrolled, theme, setTheme, menuOpen, setMenuOpen, setCartOpen,
       }
       setScrollSection('home');
     };
-    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
@@ -120,17 +120,14 @@ function NavBar({ scrolled, theme, setTheme, menuOpen, setMenuOpen, setCartOpen,
             onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
           >Home</NavLink>
           <button
-            type="button"
             className={`nav-link-premium${activeSection === 'categories' ? ' nav-active' : ''}`}
             onClick={() => scrollTo('categories')}
           >Categories</button>
           <button
-            type="button"
             className={`nav-link-premium${activeSection === 'products' ? ' nav-active' : ''}`}
             onClick={() => scrollTo('products')}
           >Products</button>
           <button
-            type="button"
             className={`nav-link-premium${activeSection === 'deals' ? ' nav-active' : ''}`}
             onClick={() => scrollTo('deals')}
           >Deals</button>
@@ -186,7 +183,6 @@ function App() {
     window.addEventListener('likesUpdated', loadLikes);
 
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    handleScroll();
     window.addEventListener('scroll', handleScroll);
 
     return () => {
@@ -337,9 +333,9 @@ function App() {
               <div className="footer-bottom-premium">
                 <p>&copy; 2026 TechStore. All rights reserved.</p>
                 <div className="footer-social-premium">
-                  <a href="#" className="social-link-premium" aria-label="Twitter"><FaTwitter /></a>
-                  <a href="#" className="social-link-premium" aria-label="LinkedIn"><FaLinkedinIn /></a>
-                  <a href="#" className="social-link-premium" aria-label="GitHub"><FaGithub /></a>
+                  <a href="#" className="social-link-premium" aria-label="Twitter">ð•</a>
+                  <a href="#" className="social-link-premium" aria-label="LinkedIn">in</a>
+                  <a href="#" className="social-link-premium" aria-label="GitHub">GH</a>
                 </div>
               </div>
             </div>

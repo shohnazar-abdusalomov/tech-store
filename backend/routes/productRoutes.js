@@ -12,9 +12,9 @@ router.get(
     ProductController.getProductById
 );
 
+// Allow creating products without auth for development
 router.post(
     '/',
-    auth,
     Validators.productValidation.create,
     ProductController.createProduct
 );
