@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { pool } = require('../config/database');
+const pool = require('../config/database');
 
 async function migrateImages() {
     const client = await pool.connect();
