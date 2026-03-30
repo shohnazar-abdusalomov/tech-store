@@ -31,13 +31,9 @@ class ProductController {
 
     async createProduct(req, res, next) {
         try {
-            const { title, price, description, rating, images } = req.body;
+            const { title, price, description, rating, category, images } = req.body;
             const result = await productService.createProduct({
-                title,
-                price,
-                description,
-                rating,
-                images
+                title, price, description, rating, category, images
             });
 
             if (!result.success) {

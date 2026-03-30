@@ -1,109 +1,53 @@
 const Product = require('../models/Product');
 
 class ProductService {
-    getAllProducts() {
+    async getAllProducts() {
         try {
-            const products = Product.findAll();
-            return {
-                success: true,
-                data: products,
-                count: products.length
-            };
+            const products = await Product.findAll();
+            return { success: true, data: products, count: products.length };
         } catch (error) {
             throw new Error(`Failed to fetch products: ${error.message}`);
         }
     }
 
-    getProductById(id) {
+    async getProductById(id) {
         try {
-            const product = Product.findById(id);
-            if (!product) {
-                return {
-                    success: false,
-                    error: 'Product not found',
-                    statusCode: 404
-                };
-            }
-            return {
-                success: true,
-                data: product
-            };
+            const product = await Product.findById(id);
+            if (!product) return { success: false, error: 'Product not found' };
+            return { success: true, data: product };
         } catch (error) {
             throw new Error(`Failed to fetch product: ${error.message}`);
         }
     }
 
-    createProduct(productData) {
+    async createProduct(productData) {
         try {
-            const { title, price, description, rating, images } = productData;
-
-            if (!title || !price) {
-                return {
-                    success: false,
-                    error: 'Title and price are required',
-                    statusCode: 400
-                };
-            }
-
-            const product = Product.create({
-                title,
-                price,
-                description,
-                rating,
-                images
-            });
-
-            return {
-                success: true,
-                data: product,
-                statusCode: 201
-            };
+            const { title, price, description, rating, category, images } = productData;
+            if (!title || !price) return { success: false, error: 'Title and price are required' };
+            const product = await Product.create({ title, price, description, rating, category, images });
+            return { success: true, data: product };
         } catch (error) {
             throw new Error(`Failed to create product: ${error.message}`);
         }
     }
 
-    updateProduct(id, updateData) {
+    async updateProduct(id, updateData) {
         try {
-            const existingProduct = Product.findById(id);
-            if (!existingProduct) {
-                return {
-                    success: false,
-                    error: 'Product not found',
-                    statusCode: 404
-                };
-            }
-
-            Product.update(id, updateData);
-            const updatedProduct = Product.findById(id);
-
-            return {
-                success: true,
-                data: updatedProduct
-            };
+            const existing = await Product.findById(id);
+            if (!existing) return { success: false, error: 'Product not found' };
+            const updated = await Product.update(id, updateData);
+            return { success: true, data: updated };
         } catch (error) {
             throw new Error(`Failed to update product: ${error.message}`);
         }
     }
 
-    deleteProduct(id) {
+    async deleteProduct(id) {
         try {
-            const existingProduct = Product.findById(id);
-            if (!existingProduct) {
-                return {
-                    success: false,
-                    error: 'Product not found',
-                    statusCode: 404
-                };
-            }
-
-            Product.delete(id);
-
-            return {
-                success: true,
-                message: 'Product deleted successfully',
-                id: parseInt(id)
-            };
+            const existing = await Product.findById(id);
+            if (!existing) return { success: false, error: 'Product not found' };
+            await Product.delete(id);
+            return { success: true, message: 'Product deleted successfully', id: parseInt(id) };
         } catch (error) {
             throw new Error(`Failed to delete product: ${error.message}`);
         }
